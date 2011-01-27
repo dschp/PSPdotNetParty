@@ -25,6 +25,7 @@ using System.Net.NetworkInformation;
 using System.Threading;
 using PspDotNetParty;
 using PspDotNetParty.Server;
+using System.IO;
 
 namespace ArenaServer
 {
@@ -460,7 +461,7 @@ namespace ArenaServer
 
             bool ChatHandler(PlayerState user, string message)
             {
-                string chatMessage = String.Format("{0} <{1}> {2}", Protocol1Constants.COMMAND_CHAT, user.Name, message);
+                string chatMessage = Protocol1Constants.COMMAND_CHAT + " <" + user.Name + "> " + message;
 
                 user.CurrentRoom.ForEach(new ForEachPlayerAction(
                     delegate(PlayerState p)
@@ -883,11 +884,11 @@ namespace ArenaServer
                     return true;
                 }
 
-                byte[] dest = packet.Skip(Utility.HEADER_OFFSET).Take(6).ToArray();
-                byte[] src = packet.Skip(Utility.HEADER_OFFSET + 6).Take(6).ToArray();
-
-                PhysicalAddress destMac = new PhysicalAddress(dest);
-                PhysicalAddress srcMac = new PhysicalAddress(src);
+                byte[] buff = new byte[6];
+                Array.Copy(packet, Utility.HEADER_OFFSET, buff, 0, 6);
+                PhysicalAddress destMac = new PhysicalAddress(buff);
+                Array.Copy(packet, Utility.HEADER_OFFSET + 6, buff, 0, 6);
+                PhysicalAddress srcMac = new PhysicalAddress(buff);
 
                 string destMacStr = destMac.ToString();
                 string srcMacStr = srcMac.ToString();

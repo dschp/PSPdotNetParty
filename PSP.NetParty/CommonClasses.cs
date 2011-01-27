@@ -27,7 +27,16 @@ namespace PspDotNetParty
     {
         byte[] _rawBytes;
         int count;
-        public byte[] RawBytes { get { return _rawBytes.Take(count).ToArray(); } }
+        public byte[] RawBytes
+        {
+            get
+            {
+                byte[] buff = new byte[count];
+                Array.Copy(_rawBytes, 0, buff, 0, buff.Length);
+                return buff;
+            }
+        }
+
         public string[] Messages
         {
             get

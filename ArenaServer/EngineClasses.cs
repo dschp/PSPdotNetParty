@@ -22,6 +22,7 @@ using System.Linq;
 using System.Text;
 using System.Net;
 using PspDotNetParty.Server;
+using System.Threading;
 
 namespace ArenaServer
 {
@@ -131,6 +132,7 @@ namespace ArenaServer
         public string Password = string.Empty;
 
         List<PlayerState> OtherPlayers = new List<PlayerState>();
+        ReaderWriterLockSlim otherPlayersRWLock = new ReaderWriterLockSlim();
 
         public Room(PlayerState master = null)
         {
@@ -143,7 +145,8 @@ namespace ArenaServer
 
         public bool AddPlayer(PlayerState state)
         {
-            lock (OtherPlayers)
+            otherPlayersRWLock.EnterWriteLock();
+            try
             {
                 if (OtherPlayers.Count < _maxOtherPlayers)
                 {
@@ -152,12 +155,20 @@ namespace ArenaServer
                 }
                 else { return false; }
             }
+            catch (Exception) { throw; }
+            finally { otherPlayersRWLock.ExitWriteLock(); }
         }
 
         public void RemovePlayer(PlayerState state)
         {
-            lock (OtherPlayers)
+            otherPlayersRWLock.EnterWriteLock();
+            try
+            {
                 OtherPlayers.Remove(state);
+            }
+            catch (Exception) { throw; }
+            finally { otherPlayersRWLock.ExitWriteLock(); }
+
         }
 
         public void ForEach(ForEachPlayerAction action, PlayerState skip = null)
@@ -165,11 +176,14 @@ namespace ArenaServer
             if (Master != null && Master != skip)
                 action(Master);
 
-            lock (OtherPlayers)
+            otherPlayersRWLock.EnterReadLock();
+            try
             {
                 foreach (PlayerState s in OtherPlayers)
                     if (s != skip) action(s);
             }
+            catch (Exception) { throw; }
+            finally { otherPlayersRWLock.ExitReadLock(); }
         }
 
         public List<PlayerState> GetPlayerList(PlayerState exclude = null)
@@ -177,10 +191,15 @@ namespace ArenaServer
             List<PlayerState> list = new List<PlayerState>(PlayerCount);
             if (Master != null && Master != exclude)
                 list.Add(Master);
-            lock (OtherPlayers)
+            otherPlayersRWLock.EnterReadLock();
+            try
+            {
                 foreach (PlayerState s in OtherPlayers)
                     if (s != exclude)
                         list.Add(s);
+            }
+            catch (Exception) { throw; }
+            finally { otherPlayersRWLock.ExitReadLock(); }
             return list;
         }
     }

@@ -1369,11 +1369,11 @@ namespace ArenaClient
                 byte[] packet = data.RawBytes;
                 if (Utility.IsPspPacket(packet, Utility.HEADER_OFFSET))
                 {
-                    PhysicalAddress srcMac = new PhysicalAddress(packet.Skip(Utility.HEADER_OFFSET + 6).Take(6).ToArray());
-                    string src = srcMac.ToString();
-
-                    PhysicalAddress destMac = new PhysicalAddress(packet.Skip(Utility.HEADER_OFFSET).Take(6).ToArray());
-                    string dest = destMac.ToString();
+                    byte[] buff = new byte[6];
+                    Array.Copy(packet, Utility.HEADER_OFFSET, buff, 0, 6);
+                    string dest = new PhysicalAddress(buff).ToString();
+                    Array.Copy(packet, Utility.HEADER_OFFSET + 6, buff, 0, 6);
+                    string src = new PhysicalAddress(buff).ToString();
 
                     TraficStatistics remoteStats;
                     // 再度パケットキャプチャされた時にサーバーへ再送しないために記録
