@@ -85,7 +85,7 @@ namespace ArenaServer
 
         Dictionary<string, Room> PlayRooms = new Dictionary<string, Room>();
 
-        Room Lobby = new Room();
+        Room Lobby = new LobbyRoom();
 
         public int MaxPlayers
         {
@@ -99,6 +99,11 @@ namespace ArenaServer
             get { return _maxRooms; }
             set { if (value < 1) throw new ArgumentOutOfRangeException(); _maxRooms = value; }
         }
+
+        /// <summary>
+        /// ロビーで離席状態が続いた場合に切断されるまでの時間（100ナノ秒単位）。
+        /// </summary>
+        public int IdlePlayerTimeout { get; set; }
 
         void SendServerStatusToAllLoginPlayersLoop(object o)
         {
@@ -127,6 +132,19 @@ namespace ArenaServer
                     catch (Exception) { continue; }
 
                 sb.Clear();
+
+                if (IdlePlayerTimeout > 0)
+                {
+                    long ticks = DateTime.UtcNow.Ticks;
+                    foreach (var p in Lobby.GetPlayerList())
+                    {
+                        if (ticks - Interlocked.Read(ref p.LastActTicks) > IdlePlayerTimeout)
+                        {
+                            ((AsyncTcpServer<PlayerState>.TcpConnection)p.Connection).DisconnectClient(p);
+                        }
+                    }
+                }
+
                 Thread.Sleep(2000);
 
                 //Console.WriteLine("[Lobby]");
@@ -468,6 +486,9 @@ namespace ArenaServer
                     {
                         p.Connection.Send(chatMessage);
                     }));
+
+                if (user.CurrentRoom is LobbyRoom)
+                    Interlocked.Exchange(ref user.LastActTicks, DateTime.UtcNow.Ticks);
 
                 return true;
             }

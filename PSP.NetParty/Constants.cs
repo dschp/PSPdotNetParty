@@ -55,6 +55,7 @@ namespace PspDotNetParty
         public const string SERVER_PORT = "Port";
         public const string SERVER_MAX_USERS = "MaxUsers";
         public const string SERVER_MAX_ROOMS = "MaxRooms";
+        public const string SERVER_IDLEPLAYER_TIMEOUT = "IdlePlayerTimeout";
     }
 
     public sealed class Protocol1Constants

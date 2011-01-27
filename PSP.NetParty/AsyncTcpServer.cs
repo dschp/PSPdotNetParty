@@ -118,7 +118,7 @@ namespace PspDotNetParty.Server
             AcceptNext();
         }
 
-        class TcpConnection : IServerConnection
+        public class TcpConnection : IServerConnection
         {
             IServerHandler<Type> handler;
             Socket socket;
@@ -245,7 +245,7 @@ namespace PspDotNetParty.Server
                 }
             }
 
-            void DisconnectClient(Type state)
+            public void DisconnectClient(Type state)
             {
                 //Console.WriteLine("TCP DisconnectClient");
 

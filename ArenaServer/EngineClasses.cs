@@ -96,6 +96,8 @@ namespace ArenaServer
         public long Ping = 0;
         public string Ssid = null;
 
+        public long LastActTicks;
+
         public PlayerState(IServerConnection connection)
         {
             _connection = connection;
@@ -143,7 +145,7 @@ namespace ArenaServer
             }
         }
 
-        public bool AddPlayer(PlayerState state)
+        public virtual bool AddPlayer(PlayerState state)
         {
             otherPlayersRWLock.EnterWriteLock();
             try
@@ -159,7 +161,7 @@ namespace ArenaServer
             finally { otherPlayersRWLock.ExitWriteLock(); }
         }
 
-        public void RemovePlayer(PlayerState state)
+        public virtual void RemovePlayer(PlayerState state)
         {
             otherPlayersRWLock.EnterWriteLock();
             try
@@ -201,6 +203,15 @@ namespace ArenaServer
             catch (Exception) { throw; }
             finally { otherPlayersRWLock.ExitReadLock(); }
             return list;
+        }
+    }
+
+    class LobbyRoom : Room
+    {
+        public override bool AddPlayer(PlayerState state)
+        {
+            Interlocked.Exchange(ref state.LastActTicks, DateTime.UtcNow.Ticks);
+            return base.AddPlayer(state);
         }
     }
 

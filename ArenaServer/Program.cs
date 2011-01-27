@@ -46,6 +46,10 @@ namespace ArenaServer
             if (!int.TryParse(p.GetSetting(IniConstants.SECTION_SETTINGS, IniConstants.SERVER_MAX_ROOMS), out maxRooms))
                 maxRooms = 3;
 
+            int idleTimeout;
+            if (!int.TryParse(p.GetSetting(IniConstants.SECTION_SETTINGS, IniConstants.SERVER_IDLEPLAYER_TIMEOUT), out idleTimeout))
+                idleTimeout = -1;
+
             switch (args.Length)
             {
                 case 2:
@@ -62,6 +66,7 @@ namespace ArenaServer
             p.SetSetting(IniConstants.SECTION_SETTINGS, IniConstants.SERVER_PORT, port.ToString());
             p.SetSetting(IniConstants.SECTION_SETTINGS, IniConstants.SERVER_MAX_USERS, maxUsers.ToString());
             p.SetSetting(IniConstants.SECTION_SETTINGS, IniConstants.SERVER_MAX_ROOMS, maxRooms.ToString());
+            p.SetSetting(IniConstants.SECTION_SETTINGS, IniConstants.SERVER_IDLEPLAYER_TIMEOUT, idleTimeout.ToString());
             p.SaveSettings();
 
             Protocol1ArenaEngine engine = new Protocol1ArenaEngine();
@@ -69,6 +74,7 @@ namespace ArenaServer
             {
                 engine.MaxPlayers = maxUsers;
                 engine.MaxRooms = maxRooms;
+                engine.IdlePlayerTimeout = idleTimeout * 10000000;
 
                 engine.StartListening(new IPEndPoint(IPAddress.Any, port));
 
